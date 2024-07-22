@@ -26,19 +26,38 @@ def sitemap():
     return generate_sitemap(app)
 
 @app.route('/members', methods=['GET'])
-def handle_hello():
-
+def get_all_members():
     # this is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
-    response_body = {
-        "hello": "world",
-        "family": members
-    }
-
-
+    response_body = members
     return jsonify(response_body), 200
 
-# this only runs if `$ python src/app.py` is executed
+@app.route('/member/<int:id>', methods=['GET'])
+def get_member(id):
+    member = jackson_family.get_member(id)
+    if member:
+        print('entró en el if')
+        return jsonify(member), 200
+    else:
+        return jsonify({"message": "no existe ese miembro"}), 400
+
+@app.route('/member', methods=['POST'])
+def add_member():
+    member = request.json
+    jackson_family.add_member(member)
+    return jsonify(member), 200
+
+@app.route('/member/<int:id>', methods = ['DELETE'])
+def delete_a_member(id):
+    try:
+        deleted = jackson_family.delete_member(id)
+        if deleted:
+            return jsonify({"done" : True}), 200
+        else:
+            return jsonify({"done" : False}), 400
+    except:
+        return jsonify({"msg" : "internal server error"}), 500
+
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=True)
